@@ -2,11 +2,11 @@ const jwt = require("jsonwebtoken");
 const auth = (role) => {
   return async (req, res, next) => {
     // skip token check for login and register page
-    if (req.originalUrl === "/login" || req.originalUrl === "/register") {
-      return next();
-    }
+    // if (req.originalUrl === "/login" || req.originalUrl === "/register") {
+    //   return next();
+    // }
 
-    console.log(role);
+    // console.log(role);
     
     const token = req.cookies.token;
     if (!token) {
