@@ -1,3 +1,3 @@
 module.exports.openDashboardPage = (req, res) => {
-    return res.send("Admin Dashboard");
+    return res.render("./admin/dashboard")
 }

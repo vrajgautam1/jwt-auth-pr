@@ -15,15 +15,19 @@ module.exports.login = async(req, res) => {
         const user = await User.findOne({email:email});
         
         if(!user){
+            req.flash("error", "User does not exist")
             cosnole.log("User does not exist");
             return res.redirect("/login")
         }
 
         //-2 check if the password is correct
-       if(user.password !== password){
-        console.log("Password is incorrect")
-        return res.redirect("/login")
-       }
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+        if(!isPasswordCorrect){
+            req.flash("error", "Incorrect password")
+            console.log("Incorrect password")
+            return res.redirect("/login")
+        }
 
         //-now lets jwt this bitch. 
         //-1 generate a token
@@ -41,6 +45,7 @@ module.exports.login = async(req, res) => {
         })
 
         if(user.role === "admin"){
+            req.flash("success", "admin logged in successfully")
             return res.redirect("/dashboard");
         }
 
