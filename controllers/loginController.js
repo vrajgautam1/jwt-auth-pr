@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt"); 
+const { request } = require("express");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
@@ -12,26 +13,22 @@ module.exports.login = async(req, res) => {
     try {
         //-1 check if the user exists in the database
         const user = await User.findOne({email:email});
-
-        console.log(user)
-
+        
         if(!user){
-            console.log("User does not exist")
-            return res.redirect("/register")
+            cosnole.log("User does not exist");
+            return res.redirect("/login")
         }
 
         //-2 check if the password is correct
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-        if(!isPasswordCorrect){
-            console.log("Password is incorrect")
-            return res.redirect("/login")
-        }
+       if(user.password !== password){
+        console.log("Password is incorrect")
+        return res.redirect("/login")
+       }
 
         //-now lets jwt this bitch. 
         //-1 generate a token
         const token = jwt.sign(
-            {user: user.username, role: user.role}, //1st param
+            {user: user.username, role:user.role},
             process.env.JWT_SECRET,
             {expiresIn: "1d"}
         )
@@ -40,7 +37,7 @@ module.exports.login = async(req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             secure: false, 
-            maxAge: 24*60*60*1000
+            maxAge: 1000*60*60*24
         })
 
         if(user.role === "admin"){
@@ -50,7 +47,7 @@ module.exports.login = async(req, res) => {
         if(user.role === "user"){
             return res.redirect("/")
         }
-
+       
     } catch (error) {
         console.log("Error logging in user");
         console.log(error.message)
@@ -59,7 +56,8 @@ module.exports.login = async(req, res) => {
 }
 
 module.exports.openRegistrationPage = async(req, res) => {
-    return res.render("./login/register.ejs")
+    // const error = req.flash("error") // no need for this line once we make the flash messages global
+    return res.render("./login/register.ejs");
 }
 
 module.exports.register = async(req, res) => {
@@ -71,8 +69,10 @@ module.exports.register = async(req, res) => {
         
         if(userExists){
             console.log("User already exists");
+            const error = req.flash("error", "User already exists")
             return res.redirect("/register")
         }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         await User.create({
             username,
